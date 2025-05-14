@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: CF7 CiviCRM Integration
- * Plugin URI: https://github.com/yourusername/cf7-civicrm-integration
+ * Plugin URI: https://github.com/still-crazy-productions/civicf7
  * Description: Integrates Contact Form 7 with CiviCRM API v4
  * Version: 1.0.0
- * Author: Your Name
- * Author URI: https://yourwebsite.com
+ * Author: Ramon Dailey
+ * Author URI: https://github.com/still-crazy-productions
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: cf7-civicrm-integration
@@ -17,6 +17,17 @@
 // If this file is called directly, abort.
 if (!defined('WPINC')) {
     die;
+}
+
+// Enable debugging
+if (!defined('WP_DEBUG')) {
+    define('WP_DEBUG', true);
+}
+if (!defined('WP_DEBUG_LOG')) {
+    define('WP_DEBUG_LOG', true);
+}
+if (!defined('WP_DEBUG_DISPLAY')) {
+    define('WP_DEBUG_DISPLAY', false);
 }
 
 // Define plugin constants
@@ -162,5 +173,27 @@ function cf7_civicrm_activate() {
 // Deactivation hook
 register_deactivation_hook(__FILE__, 'cf7_civicrm_deactivate');
 function cf7_civicrm_deactivate() {
-    // Cleanup if needed
+    // Delete all plugin options
+    delete_option('cf7_civicrm_settings');
+    
+    // Clear any transients that might be storing API credentials
+    delete_transient('cf7_civicrm_api_credentials');
+    
+    // Clear any cached API responses
+    delete_transient('cf7_civicrm_api_test');
+}
+
+// Uninstall hook - this runs when the plugin is deleted
+register_uninstall_hook(__FILE__, 'cf7_civicrm_uninstall');
+function cf7_civicrm_uninstall() {
+    // Delete all plugin options
+    delete_option('cf7_civicrm_settings');
+    
+    // Clear any transients
+    delete_transient('cf7_civicrm_api_credentials');
+    delete_transient('cf7_civicrm_api_test');
+    
+    // Delete any post meta data for all forms
+    global $wpdb;
+    $wpdb->delete($wpdb->postmeta, array('meta_key' => '_cf7_civicrm_settings'));
 } 
